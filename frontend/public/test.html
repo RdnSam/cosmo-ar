@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COSMO AR Test</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+    model-viewer { width: 100%; height: 500px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>COSMO AR - Direct Test</h1>
+    <p>SKU: OA-250</p>
+  </div>
+
+  <model-viewer
+    src="http://192.168.43.250:3001/models/toilet.glb"
+    alt="COSMO Product"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    camera-orbit="0deg 75deg 105%"
+    auto-rotate
+    auto-rotate-delay="0"
+    rotation-per-second="30deg"
+    touch-action="pan-y"
+    disable-zoom
+    environment-image="neutral"
+    shadow-intensity="1"
+    style="width: 100%; height: 80vh;"
+  >
+    <button slot="ar-button" style="
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2563eb;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+    ">View in AR</button>
+  </model-viewer>
+
+  <script>
+    console.log('Test page loaded');
+    fetch('http://192.168.43.250:3001/api/products/OA-250')
+      .then(r => r.json())
+      .then(d => console.log('API works:', d))
+      .catch(e => console.error('API error:', e));
+  </script>
+</body>
+</html>

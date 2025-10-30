@@ -1,0 +1,206 @@
+// COSMO AR Database Schema
+// Phase 1: Basic WebAR (Product, Scan)
+// Phase 2-6: Will add more models incrementally
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== PHASE 1: Basic WebAR Models =====
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  sku         String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  category    Category @default(GENERAL)
+  description String?  @db.Text
+
+  // Product Specifications (from COSMO catalog)
+  composition String?  @db.VarChar(255) // "Meltblown Polypropylene", etc
+  sheetSize   String?  @db.VarChar(100) // "40cm x 50cm"
+  rollSize    String?  @db.VarChar(100) // "30cm x 40m"
+  capacity    String?  @db.Text         // "Absorbs up to 10x its weight"
+
+  // Certifications
+  halal       Boolean  @default(false)
+  lppomMui    Boolean  @default(false)
+
+  // AR Assets
+  modelUrl    String   @db.Text         // URL to .glb file (e.g., /models/oa-250.glb)
+  posterUrl   String?  @db.Text         // Product image for fallback
+  qrCodeUrl   String?  @db.Text         // Generated QR code
+
+  // Pricing
+  price       Decimal? @db.Decimal(12, 2)
+  currency    String?  @default("IDR") @db.VarChar(3)
+
+  // Status
+  status      ProductStatus @default(ACTIVE)
+  isActive    Boolean  @default(true)
+
+  // Relations
+  scans       Scan[]
+
+  // Metadata
+  viewCount   Int      @default(0)
+  scanCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sku])
+  @@index([category])
+  @@index([status])
+  @@map("products")
+}
+
+model Scan {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Session tracking
+  sessionId   String   @db.VarChar(255) // UUID for tracking unique sessions
+
+  // Analytics
+  deviceInfo  String?  @db.Text         // User agent, device type
+  ipAddress   String?  @db.VarChar(45)  // IPv4/IPv6
+  location    String?  @db.VarChar(255) // City, Country (from IP)
+  referer     String?  @db.Text         // Where did user come from
+  utmSource   String?  @db.VarChar(255) // UTM tracking
+  utmMedium   String?  @db.VarChar(255)
+  utmCampaign String?  @db.VarChar(255)
+
+  // Engagement
+  duration    Int?                      // Session duration in seconds
+  interacted  Boolean  @default(false)  // Did user open chat/interact?
+
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("scans")
+}
+
+// ===== ENUMS =====
+
+enum Category {
+  OIL        // Oil Absorbent (OA series)
+  CHEMICAL   // Chemical Absorbent (CA series)
+  GENERAL    // General Purpose (PSW series)
+  MAINTENANCE
+  SPILL_KIT
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+// ===== PHASE 2-6 Models (Commented for now) =====
+
+// Uncomment these models as we progress to next phases:
+
+/*
+// PHASE 2: ChatGPT Integration
+model ChatLog {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  sessionId   String   @unique @db.VarChar(255)
+
+  messages    Json     // Array of {role, content, timestamp}
+
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  totalMsgs   Int      @default(0)
+  resolved    Boolean  @default(false)
+  feedback    Int?     // Rating 1-5
+
+  leadId      Int?
+
+  @@index([productId])
+  @@index([sessionId])
+  @@map("chat_logs")
+}
+*/
+
+/*
+// PHASE 4: Lead Generation
+model Lead {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+
+  // Contact Info
+  name        String   @db.VarChar(255)
+  email       String   @db.VarChar(255)
+  phone       String?  @db.VarChar(50)
+  company     String?  @db.VarChar(255)
+  jobRole     String?  @db.VarChar(100)
+
+  // Intent
+  needType    String?  @db.VarChar(100) // "Sample Request", "Quotation", etc
+  message     String?  @db.Text
+
+  // Source
+  source      String   @default("ar-scan") @db.VarChar(50)
+  utm         Json?    // UTM parameters
+
+  // Status
+  status      LeadStatus @default(NEW)
+  assignedTo  Int?
+
+  // Follow-up
+  contacted   Boolean  @default(false)
+  contactedAt DateTime?
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([productId])
+  @@map("leads")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+*/
+
+/*
+// PHASE 5: User Management (for admin dashboard)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(255)
+  role      Role     @default(SALES)
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  SALES
+  MARKETING
+  VIEWER
+}
+*/
