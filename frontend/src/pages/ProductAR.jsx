@@ -82,7 +82,7 @@ export default function ProductAR() {
       {/* 3D Model Viewer */}
       <div className="flex-1 relative bg-gray-50">
         <model-viewer
-          src={product.modelUrl || 'http://192.168.43.250:3001/models/toilet.glb'}
+          src={product.modelUrl || 'http://192.168.43.250:3001/models/TissueCosmo.glb'}
           alt={product.name}
           ar
           ar-modes="webxr scene-viewer quick-look"
