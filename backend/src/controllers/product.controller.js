@@ -1,5 +1,7 @@
 import prisma from '../utils/prisma.js';
 import QRCode from 'qrcode';
+import { APP_CONFIG } from '../config/app.config.js';
+import { QR_CONFIG } from '../config/constants.js';
 
 // Get all products
 export const getProducts = async (req, res, next) => {
@@ -86,15 +88,70 @@ export const generateQR = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    const url = `${process.env.FRONTEND_URL}/ar/${sku}`;
-    const qrCode = await QRCode.toDataURL(url, { width: 512, margin: 2 });
+    // Generate AR URL
+    const frontendUrl = APP_CONFIG.cors.origin || process.env.FRONTEND_URL;
+    const arUrl = `${frontendUrl}/ar/${sku}`;
 
+    // Generate QR code dengan config
+    const qrCode = await QRCode.toDataURL(arUrl, {
+      ...QR_CONFIG,
+      width: req.query.size ? parseInt(req.query.size) : 512,
+    });
+
+    // Update product dengan QR code
     await prisma.product.update({
       where: { sku },
       data: { qrCodeUrl: qrCode }
     });
 
-    res.json({ success: true, qrCode, url });
+    res.json({
+      success: true,
+      data: {
+        qrCode,
+        url: arUrl,
+        product: {
+          sku: product.sku,
+          name: product.name
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Generate QR codes untuk semua products (bulk)
+export const generateAllQR = async (req, res, next) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true }
+    });
+
+    const frontendUrl = APP_CONFIG.cors.origin || process.env.FRONTEND_URL;
+    const results = [];
+
+    for (const product of products) {
+      const arUrl = `${frontendUrl}/ar/${product.sku}`;
+      const qrCode = await QRCode.toDataURL(arUrl, QR_CONFIG);
+
+      await prisma.product.update({
+        where: { sku: product.sku },
+        data: { qrCodeUrl: qrCode }
+      });
+
+      results.push({
+        sku: product.sku,
+        name: product.name,
+        qrCode,
+        url: arUrl
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Generated ${results.length} QR codes`,
+      data: results
+    });
   } catch (error) {
     next(error);
   }

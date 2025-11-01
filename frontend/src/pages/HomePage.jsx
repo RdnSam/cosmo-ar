@@ -1,27 +1,23 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { APP_CONFIG } from '../config/app.config.js';
+import { PRODUCTS, AR_FEATURES, HOW_IT_WORKS_STEPS, QR_CONFIG } from '../config/constants.js';
 
 export default function HomePage() {
   const [qrCode, setQrCode] = useState('');
   const [activeTab, setActiveTab] = useState('demo');
-  const testUrl = 'http://192.168.43.250:5173/test.html';
+
+  // Use config for test URL
+  const testUrl = `${APP_CONFIG.urls.frontend}/test.html`;
 
   useEffect(() => {
-    QRCode.toDataURL(testUrl, {
-      width: 320,
-      margin: 2,
-      color: {
-        dark: '#1e40af',
-        light: '#ffffff'
-      }
-    }).then(setQrCode);
-  }, []);
-
-  const products = [
-    { sku: 'OA-250', name: 'Oil Absorbent Wipes', icon: '🛢️', color: 'from-orange-400 to-red-500' },
-    { sku: 'CA-250', name: 'Chemical Absorbent', icon: '🧪', color: 'from-green-400 to-teal-500' },
-    { sku: 'PSW', name: 'General Purpose', icon: '🧽', color: 'from-purple-400 to-pink-500' }
-  ];
+    // Generate QR code with centralized config
+    QRCode.toDataURL(testUrl, QR_CONFIG)
+      .then(setQrCode)
+      .catch(error => {
+        console.error('Failed to generate QR code:', error);
+      });
+  }, [testUrl]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800">
@@ -97,12 +93,7 @@ export default function HomePage() {
                   AR Features
                 </h3>
                 <div className="space-y-4">
-                  {[
-                    { icon: '🎨', title: '360° View', desc: 'Rotate & explore every angle' },
-                    { icon: '📏', title: 'True Scale', desc: 'See actual product size' },
-                    { icon: '🏠', title: 'Place in Space', desc: 'Visualize in your environment' },
-                    { icon: '⚡', title: 'Instant Load', desc: 'No app download needed' }
-                  ].map((feature, i) => (
+                  {AR_FEATURES.map((feature, i) => (
                     <div key={i} className="flex items-start gap-4 bg-white bg-opacity-5 rounded-xl p-4">
                       <span className="text-3xl">{feature.icon}</span>
                       <div>
@@ -120,7 +111,7 @@ export default function HomePage() {
           <div className="mb-12">
             <h2 className="text-4xl font-bold text-white text-center mb-8">Our Products</h2>
             <div className="grid md:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {PRODUCTS.map((product) => (
                 <a
                   key={product.sku}
                   href={`/ar/${product.sku}`}
@@ -145,12 +136,7 @@ export default function HomePage() {
           <div className="bg-white bg-opacity-10 backdrop-blur-xl rounded-3xl p-10 border border-white border-opacity-20">
             <h3 className="text-3xl font-bold text-white text-center mb-8">How It Works</h3>
             <div className="grid md:grid-cols-4 gap-6">
-              {[
-                { step: '1', icon: '📱', text: 'Scan QR with camera' },
-                { step: '2', icon: '🌐', text: 'Browser opens AR view' },
-                { step: '3', icon: '🎨', text: 'Interact with 3D model' },
-                { step: '4', icon: '📍', text: 'Place in your space' }
-              ].map((item, i) => (
+              {HOW_IT_WORKS_STEPS.map((item, i) => (
                 <div key={i} className="text-center">
                   <div className="bg-white bg-opacity-20 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4">
                     {item.step}

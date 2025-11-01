@@ -1,58 +1,413 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>COSMO AR Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>COSMO AR Experience</title>
+
+  <!-- Runtime Config -->
+  <script src="./config.js"></script>
+
+  <!-- Model Viewer -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
   <style>
-    body { margin: 0; font-family: sans-serif; }
-    .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
-    model-viewer { width: 100%; height: 500px; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 16px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 32px;
+    }
+
+    .brand-text h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .product-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* AR Viewer */
+    .ar-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #f7fafc 0%, #edf2f7 100%);
+    }
+
+    model-viewer::part(default-ar-button) {
+      display: none;
+    }
+
+    /* Controls Overlay */
+    .controls-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+      padding: 30px 20px 20px;
+      z-index: 10;
+    }
+
+    .ar-button {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 18px 32px;
+      border: none;
+      border-radius: 50px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .ar-button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .ar-icon {
+      font-size: 24px;
+    }
+
+    /* Instructions */
+    .instructions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .instruction-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .instruction-icon {
+      font-size: 18px;
+    }
+
+    /* Loading Indicator */
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #667eea;
+      z-index: 5;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .brand-text h1 {
+        font-size: 20px;
+      }
+
+      .product-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      .ar-button {
+        font-size: 16px;
+        padding: 16px 28px;
+      }
+
+      .instructions {
+        gap: 12px;
+      }
+
+      .instruction-item {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>COSMO AR - Direct Test</h1>
-    <p>SKU: OA-250</p>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="brand">
+          <span class="brand-icon">🧽</span>
+          <div class="brand-text">
+            <h1>COSMO AR</h1>
+            <p>Industrial Hygiene Wipes</p>
+          </div>
+        </div>
+        <div class="product-badge">OA-250</div>
+      </div>
+    </div>
+
+    <!-- AR Viewer Container -->
+    <div class="ar-container">
+      <!-- Status Badge -->
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span>3D Model Ready</span>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading 3D Model...</div>
+      </div>
+
+      <!-- Model Viewer -->
+      <model-viewer
+        id="viewer"
+        src=""
+        alt="COSMO OA-250 Industrial Wipes"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        camera-controls
+        camera-orbit="0deg 75deg 105%"
+        auto-rotate
+        auto-rotate-delay="1000"
+        rotation-per-second="30deg"
+        touch-action="pan-y"
+        environment-image="neutral"
+        shadow-intensity="1"
+        exposure="1"
+        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E"
+      ></model-viewer>
+
+      <!-- Controls Overlay -->
+      <div class="controls-overlay">
+        <button class="ar-button" id="arButton">
+          <span class="ar-icon">📱</span>
+          <span>View in Your Space</span>
+        </button>
+
+        <div class="instructions">
+          <div class="instruction-item">
+            <span class="instruction-icon">👆</span>
+            <span>Tap & drag to rotate</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-icon">🤏</span>
+            <span>Pinch to zoom</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-icon">📍</span>
+            <span>Tap AR to place</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <model-viewer
-    src="http://192.168.43.250:3001/models/TissueCosmo.glb"
-    alt="COSMO Product"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    camera-orbit="0deg 75deg 105%"
-    auto-rotate
-    auto-rotate-delay="0"
-    rotation-per-second="30deg"
-    touch-action="pan-y"
-    disable-zoom
-    environment-image="neutral"
-    shadow-intensity="1"
-    style="width: 100%; height: 80vh;"
-  >
-    <button slot="ar-button" style="
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #2563eb;
-      color: white;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 25px;
-      font-size: 16px;
-    ">View in AR</button>
-  </model-viewer>
-
   <script>
-    console.log('Test page loaded');
-    fetch('http://192.168.43.250:3001/api/products/OA-250')
+    // Get runtime config
+    const config = window.APP_RUNTIME_CONFIG;
+
+    // Get elements
+    const viewer = document.getElementById('viewer');
+    const loading = document.getElementById('loading');
+    const arButton = document.getElementById('arButton');
+
+    // Set model source dari config
+    viewer.src = `${config.MODELS_URL}/TissueCosmo.glb`;
+
+    // Hide loading when model loads
+    viewer.addEventListener('load', () => {
+      loading.style.display = 'none';
+      console.log('✅ 3D Model loaded successfully');
+    });
+
+    // Handle loading progress
+    viewer.addEventListener('progress', (event) => {
+      const progress = event.detail.totalProgress;
+      console.log(`📊 Loading progress: ${(progress * 100).toFixed(0)}%`);
+    });
+
+    // Custom AR button handler
+    arButton.addEventListener('click', () => {
+      viewer.activateAR();
+    });
+
+    // Track AR session
+    viewer.addEventListener('ar-status', (event) => {
+      if (event.detail.status === 'session-started') {
+        console.log('🎯 AR Session started');
+        // Track analytics
+        trackEvent('ar_session_started');
+      }
+    });
+
+    // Error handling
+    viewer.addEventListener('error', (event) => {
+      console.error('❌ Model viewer error:', event.detail);
+      loading.innerHTML = '<div style="color: #ef4444; font-weight: 600;">Failed to load model</div>';
+    });
+
+    // Analytics tracking
+    function trackEvent(eventName, data = {}) {
+      fetch(`${config.API_BASE_URL}/scans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productSku: 'OA-250',
+          event: eventName,
+          ...data,
+          timestamp: new Date().toISOString()
+        })
+      })
       .then(r => r.json())
-      .then(d => console.log('API works:', d))
-      .catch(e => console.error('API error:', e));
+      .then(d => console.log('📊 Event tracked:', eventName, d))
+      .catch(e => console.warn('⚠️ Tracking failed:', e));
+    }
+
+    // Track page view
+    trackEvent('ar_page_view', {
+      userAgent: navigator.userAgent,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+    });
+
+    // Fetch product details
+    fetch(`${config.API_BASE_URL}/products/OA-250`)
+      .then(r => r.json())
+      .then(d => {
+        console.log('✅ Product data loaded:', d);
+        if (d.data) {
+          document.title = `${d.data.name} - COSMO AR`;
+        }
+      })
+      .catch(e => console.warn('⚠️ Product fetch failed:', e));
   </script>
 </body>
 </html>

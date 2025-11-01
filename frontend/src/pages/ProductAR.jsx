@@ -1,44 +1,57 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { productAPI, scanAPI } from '../services/api';
+import { productAPI, scanAPI } from '../services/api.js';
+import { APP_CONFIG } from '../config/app.config.js';
 import '@google/model-viewer';
+
+// Generate UUID fallback untuk browser lama
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback untuk browser yang tidak support crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export default function ProductAR() {
   const { sku } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId] = useState(() => generateUUID());
 
   useEffect(() => {
-    console.log('🚀 ProductAR mounted, SKU:', sku);
-
     const fetchProduct = async () => {
       try {
-        console.log('📡 Fetching product:', sku);
-        const { data } = await productAPI.getBySku(sku);
-        console.log('✅ Product data:', data);
-        setProduct(data.data);
+        const response = await productAPI.getBySku(sku);
+        const productData = response.data?.data || response.data;
+
+        setProduct(productData);
 
         // Log scan
-        console.log('📊 Logging scan...');
-        await scanAPI.log({
-          productId: data.data.id,
-          sessionId,
-          deviceInfo: navigator.userAgent,
-          referer: document.referrer
-        });
-        console.log('✅ Scan logged');
+        if (productData?.id) {
+          await scanAPI.log({
+            productId: productData.id,
+            sessionId,
+            deviceInfo: navigator.userAgent,
+            referer: document.referrer || 'direct'
+          }).catch(err => console.warn('Scan log failed:', err));
+        }
+
       } catch (error) {
-        console.error('❌ Error fetching product:', error);
-        console.error('Error details:', error.response || error.message);
+        console.error('Error fetching product:', error);
       } finally {
-        console.log('🏁 Loading complete');
         setLoading(false);
       }
     };
 
-    fetchProduct();
+    if (sku) {
+      fetchProduct();
+    }
   }, [sku, sessionId]);
 
   if (loading) {
@@ -82,7 +95,7 @@ export default function ProductAR() {
       {/* 3D Model Viewer */}
       <div className="flex-1 relative bg-gray-50">
         <model-viewer
-          src={product.modelUrl || 'http://192.168.43.250:3001/models/TissueCosmo.glb'}
+          src={product.modelUrl ? product.modelUrl.replace('http://192.168.43.250:3001', APP_CONFIG.urls.backend) : `${APP_CONFIG.urls.models}/TissueCosmo.glb`}
           alt={product.name}
           ar
           ar-modes="webxr scene-viewer quick-look"
