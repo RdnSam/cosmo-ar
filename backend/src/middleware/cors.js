@@ -6,6 +6,7 @@ export const corsOptions = {
       'https://cosmo.kiraproject.id',  // Tambah HTTPS
       'http://www.cosmo.kiraproject.id',
       'https://www.cosmo.kiraproject.id',
+      'https://cosmovr.kiraproject.id',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://127.0.0.1:5173',
