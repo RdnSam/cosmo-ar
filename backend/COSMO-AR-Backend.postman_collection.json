@@ -1,0 +1,514 @@
+{
+	"info": {
+		"_postman_id": "cosmo-ar-backend-api",
+		"name": "COSMO AR Backend API",
+		"description": "Complete API collection for COSMO AR Backend - WebAR + Admin Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health & Info",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check if backend is running and get status of all features"
+					}
+				},
+				{
+					"name": "Root - API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Get API information and available endpoints"
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin - Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"admin_token\", jsonData.data.token);",
+									"    console.log(\"Token saved:\", jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"superadmin@cosmo.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "Login with email and password. Token will be auto-saved to collection variable."
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "profile"]
+						},
+						"description": "Get current logged-in user profile"
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin - User Management",
+			"item": [
+				{
+					"name": "Create New User/Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@cosmo.com\",\n  \"password\": \"AdminPass123!\",\n  \"name\": \"Admin User\",\n  \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						},
+						"description": "Create new user (Super Admin only). Valid roles: ADMIN, SALES, MARKETING, VIEWER"
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						},
+						"description": "Get all users (Admin+ access)"
+					}
+				},
+				{
+					"name": "Get All Users - Filter by Role",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users?role=ADMIN",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "role",
+									"value": "ADMIN"
+								}
+							]
+						},
+						"description": "Filter users by role"
+					}
+				},
+				{
+					"name": "Get All Users - Filter by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users?isActive=true",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Filter active/inactive users"
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "1"]
+						},
+						"description": "Get specific user by ID"
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"SALES\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "2"]
+						},
+						"description": "Update user details (Super Admin only)"
+					}
+				},
+				{
+					"name": "Update User Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"NewPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "2"]
+						},
+						"description": "Change user password (Super Admin only)"
+					}
+				},
+				{
+					"name": "Deactivate User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/2",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "2"]
+						},
+						"description": "Soft delete - deactivate user (Super Admin only)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Get all active products"
+					}
+				},
+				{
+					"name": "Get Products by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products?category=OIL",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products"],
+							"query": [
+								{
+									"key": "category",
+									"value": "OIL",
+									"description": "OIL, CHEMICAL, GENERAL, MAINTENANCE, SPILL_KIT"
+								}
+							]
+						},
+						"description": "Filter products by category"
+					}
+				},
+				{
+					"name": "Get Product by SKU",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/OA-250",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products", "OA-250"]
+						},
+						"description": "Get specific product by SKU (auto increments view count)"
+					}
+				},
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"OA-250\",\n  \"name\": \"Oil Absorbent Wipes\",\n  \"category\": \"OIL\",\n  \"description\": \"High-quality oil absorbent wipes\",\n  \"composition\": \"Meltblown Polypropylene\",\n  \"sheetSize\": \"40cm x 50cm\",\n  \"capacity\": \"Absorbs up to 10x its weight\",\n  \"halal\": true,\n  \"lppomMui\": true,\n  \"modelUrl\": \"/models/oa-250.glb\",\n  \"posterUrl\": \"/images/oa-250.jpg\",\n  \"price\": 150000,\n  \"currency\": \"IDR\",\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products"]
+						},
+						"description": "Create new product"
+					}
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Product Name\",\n  \"price\": 175000,\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products", "1"]
+						},
+						"description": "Update product by ID"
+					}
+				},
+				{
+					"name": "Generate QR Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/OA-250/qr",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products", "OA-250", "qr"]
+						},
+						"description": "Generate QR code for product AR view"
+					}
+				},
+				{
+					"name": "Generate QR Code - Custom Size",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/OA-250/qr?size=1024",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products", "OA-250", "qr"],
+							"query": [
+								{
+									"key": "size",
+									"value": "1024"
+								}
+							]
+						},
+						"description": "Generate QR code with custom size"
+					}
+				},
+				{
+					"name": "Generate All QR Codes",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/qr/generate-all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "products", "qr", "generate-all"]
+						},
+						"description": "Bulk generate QR codes for all active products"
+					}
+				}
+			]
+		},
+		{
+			"name": "Scans - Analytics",
+			"item": [
+				{
+					"name": "Log Scan Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": 1,\n  \"sessionId\": \"uuid-session-123\",\n  \"deviceInfo\": \"Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)\",\n  \"location\": \"Jakarta, Indonesia\",\n  \"referer\": \"https://google.com\",\n  \"utmSource\": \"google\",\n  \"utmMedium\": \"cpc\",\n  \"utmCampaign\": \"cosmo-launch\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/scans",
+							"host": ["{{base_url}}"],
+							"path": ["api", "scans"]
+						},
+						"description": "Log QR scan event with analytics data"
+					}
+				},
+				{
+					"name": "Update Scan Interaction",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"duration\": 120,\n  \"interacted\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/scans/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "scans", "1"]
+						},
+						"description": "Update scan session with duration and interaction status"
+					}
+				}
+			]
+		},
+		{
+			"name": "3D Models",
+			"item": [
+				{
+					"name": "Get Available Models",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/models",
+							"host": ["{{base_url}}"],
+							"path": ["api", "models"]
+						},
+						"description": "List all available .glb 3D models"
+					}
+				}
+			]
+		}
+	]
+}

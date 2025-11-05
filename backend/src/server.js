@@ -13,6 +13,7 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 import productRoutes from './routes/product.routes.js';
 import scanRoutes from './routes/scan.routes.js';
 import modelRoutes from './routes/model.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 app.use('/api/products', productRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/models', modelRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -54,7 +56,9 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       products: '/api/products',
-      scans: '/api/scans'
+      scans: '/api/scans',
+      models: '/api/models',
+      admin: '/api/admin'
     }
   });
 });
